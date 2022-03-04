@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:instagram_clone/resources/auth_methods.dart';
+import 'package:instagram_clone/screens/login_screen.dart';
 import 'package:instagram_clone/utils/colors.dart';
 import 'package:instagram_clone/utils/utils.dart';
 import 'package:instagram_clone/widgets/text_field_input.dart';
@@ -21,11 +22,33 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   Uint8List? _image;
+  bool _isLoading = false;
 
   void selectImage() async {
     Uint8List im = await pickImage(ImageSource.gallery);
     setState(() {
       _image = im;
+    });
+  }
+
+  void signupUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+    String res = await AuthMethods().signUpUser(
+      email: _emailController.text,
+      password: _passwordController.text,
+      username: _usernameController.text,
+      bio: _bioController.text,
+      file: _image!,
+    );
+    if (res != 'success') {
+      showSnackBar(res, context);
+    } else {
+      Navigator.pop(context);
+    }
+    setState(() {
+      _isLoading = false;
     });
   }
 
@@ -115,29 +138,26 @@ class _SignupScreenState extends State<SignupScreen> {
               const SizedBox(
                 height: 24,
               ),
-              InkWell(
-                onTap: () => AuthMethods().signUpUser(
-                  email: _emailController.text,
-                  password: _passwordController.text,
-                  username: _usernameController.text,
-                  bio: _bioController.text,
-                ),
-                child: Container(
-                  child: const Text(
-                    'SIGN UP',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  height: 40,
-                  width: double.infinity,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(
-                    color: blueColor,
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(4),
+              _isLoading
+                  ? const CircularProgressIndicator()
+                  : InkWell(
+                      onTap: signupUser,
+                      child: Container(
+                        child: const Text(
+                          'SIGN UP',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        height: 40,
+                        width: double.infinity,
+                        alignment: Alignment.center,
+                        decoration: const BoxDecoration(
+                          color: blueColor,
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(4),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
               Flexible(
                 child: Container(),
                 flex: 1,
@@ -149,12 +169,17 @@ class _SignupScreenState extends State<SignupScreen> {
                     child: const Text('Have an account?'),
                     padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
-                  Container(
-                    child: const Text(
-                      ' Sign in',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                  InkWell(
+                    onTap: (() {
+                      Navigator.pop(context);
+                    }),
+                    child: Container(
+                      child: const Text(
+                        ' Sign in',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
                   )
                 ],
               )
